@@ -1,0 +1,30 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.authController = void 0;
+const datasource_config_1 = require("../../shared/infrastructure/config/datasource.config");
+const jwt_service_1 = require("../jwt/jwt.service");
+const auth_controller_1 = require("./auth.controller");
+const auth_service_1 = require("./auth.service");
+const dotenv_1 = __importDefault(require("dotenv"));
+const login_repository_1 = require("../../shared/database/repositories/auth/login/login.repository");
+const usuario_repository_1 = require("../../shared/database/repositories/core/usuario/usuario.repository");
+const persona_repository_1 = require("../../shared/database/repositories/core/persona/persona.repository");
+const login_usuario_repository_1 = require("../../shared/database/repositories/requests/login-usuario/login-usuario-repository");
+const registrar_usuario_repository_1 = require("../../shared/database/repositories/requests/registrar-usuario/registrar-usuario-repository");
+const usuario_refresh_token_repository_1 = require("../../shared/database/repositories/core/usuario-refresh-token/usuario-refresh-token.repository");
+dotenv_1.default.config();
+const accessJwtService = new jwt_service_1.JwtService(process.env.JWT_ACCESS_SECRET, "15m");
+const refreshJwtService = new jwt_service_1.JwtService(process.env.JWT_REFRESH_SECRET, "7d");
+const usuarioRepo = new usuario_repository_1.UsuarioRepository(datasource_config_1.DataSourceConfig);
+const loginRepo = new login_repository_1.LoginRepository(datasource_config_1.DataSourceConfig);
+const personaRepo = new persona_repository_1.PersonaRepository(datasource_config_1.DataSourceConfig);
+const loginUsuarioRepo = new login_usuario_repository_1.LoginUsuarioRequestRepository(datasource_config_1.DataSourceConfig);
+const registrarUsuarioRepo = new registrar_usuario_repository_1.RegistrarUsuarioRequestRepository(datasource_config_1.DataSourceConfig);
+const usuarioRefreshTokenRepo = new usuario_refresh_token_repository_1.UsuarioRefreshTokenRepository(datasource_config_1.DataSourceConfig);
+const authService = new auth_service_1.AuthService(datasource_config_1.DataSourceConfig, accessJwtService, refreshJwtService, usuarioRepo, loginRepo, personaRepo, loginUsuarioRepo, registrarUsuarioRepo, usuarioRefreshTokenRepo);
+// para inyectar el servicio en el controlador
+const authController = new auth_controller_1.AuthController(authService);
+exports.authController = authController;
