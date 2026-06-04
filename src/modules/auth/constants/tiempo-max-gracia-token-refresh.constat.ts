@@ -1,0 +1,1 @@
+export const TIEMPO_GRACIA_SEGUNDOS = Number(process.env.REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS) || 15;

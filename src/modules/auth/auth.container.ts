@@ -16,6 +16,25 @@ dotenv.config();
 const accessJwtService = new JwtService(process.env.JWT_ACCESS_SECRET!, "15m");
 const refreshJwtService = new JwtService(process.env.JWT_REFRESH_SECRET!, "7d");
 
+
+const rsaAccessTokenService = new JwtService(
+  process.env.JWT_PRIVATE_KEY!,
+  process.env.JWT_ACCESS_EXPIRES_IN || "1h",
+  "RS256"
+);
+
+const rsaRefreshTokenService = new JwtService(
+  process.env.JWT_PRIVATE_KEY!,
+  process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+  "RS256"
+);
+
+const rsaVerificationService = new JwtService(
+  process.env.JWT_PUBLIC_KEY!,
+  "",
+  "RS256"
+);
+
 const usuarioRepo = new UsuarioRepository(DataSourceConfig);
 const loginRepo = new LoginRepository(DataSourceConfig);
 const personaRepo = new PersonaRepository(DataSourceConfig);
@@ -29,8 +48,8 @@ const usuarioRefreshTokenRepo = new UsuarioRefreshTokenRepository(
 
 const authService = new AuthService(
   DataSourceConfig,
-  accessJwtService,
-  refreshJwtService,
+  rsaAccessTokenService,
+  rsaRefreshTokenService,
   usuarioRepo,
   loginRepo,
   personaRepo,
@@ -39,7 +58,8 @@ const authService = new AuthService(
   usuarioRefreshTokenRepo,
 );
 
-// para inyectar el servicio en el controlador
 const authController = new AuthController(authService);
 
-export { authController };
+const authGuard = new AuthGuard(rsaVerificationService);
+
+export { authController, authGuard };

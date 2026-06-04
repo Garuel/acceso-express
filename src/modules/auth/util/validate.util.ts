@@ -7,6 +7,12 @@ import { logger } from "../../../shared/infrastructure/utils/logger.util";
 import { UsuarioEntity } from "../../../shared/database/entities/core/usuario.entity";
 import { ValidateResult } from "../../../shared/domain/interfaces/validate-result.interface";
 import { EstadoUsuarioEnum } from "../../../shared/domain/enum/estado-usuario.enum";
+import { UsuarioRefreshTokenEntity } from "../../../shared/database/entities/core/usuario-refresh-token.entity";
+import { TIEMPO_GRACIA_SEGUNDOS } from "../constants/tiempo-max-gracia-token-refresh.constat";
+import { BuildUtil } from "../../../shared/infrastructure/utils/build.util";
+import { UsuarioRefreshTokenRepository } from "../../../shared/database/repositories/core/usuario-refresh-token/usuario-refresh-token.repository";
+import { JwtService } from "../../jwt/jwt.service";
+import { ValidateTiempoGraciaInterface } from "../interface/validate-tiempo-gracia.interface";
 
 export namespace ValidateUtil {
   export function validateEstadoUsuario(idEstado: number): ValidateResult {
@@ -88,5 +94,53 @@ export namespace ValidateUtil {
     }
 
     return { esValido: true };
+  }
+
+  export async function validarTiempoDeGracia(
+    usuarioRefreshTokenEntity: UsuarioRefreshTokenEntity,
+    usuarioRepository: UsuarioRepository,
+    usuarioRefreshTokenRepository: UsuarioRefreshTokenRepository,
+    accessJwtService: JwtService,
+    idUsuario: number,
+  ): Promise<ValidateTiempoGraciaInterface> {
+    if (usuarioRefreshTokenEntity.fechaUso !== null) {
+      const segundosDesdeElPrimerUso =
+        (new Date().getTime() - usuarioRefreshTokenEntity.fechaUso.getTime()) /
+        1000;
+
+      if (segundosDesdeElPrimerUso <= TIEMPO_GRACIA_SEGUNDOS) {
+        logger.warn(
+          `Petición concurrente detectada (${segundosDesdeElPrimerUso}s). Retornando token existente.`,
+        );
+
+        const usuario = await usuarioRepository.getUsuarioPorId(idUsuario);
+        const usuarioInfoToken = BuildUtil.buildUsuarioInfoToken(usuario!);
+        const accessToken = accessJwtService.sign(usuarioInfoToken);
+
+        return {
+          esConcurrente: true,
+          tokens: {
+            accessToken,
+            refreshToken: usuarioRefreshTokenEntity.refreshToken,
+          },
+        };
+      }
+
+      logger.error(
+        `ALERTA DE SEGURIDAD: Intento de reutilización de Refresh Token para el usuario ${idUsuario}`,
+      );
+      await usuarioRefreshTokenRepository.eliminarTodosLosTokensDelUsuario(
+        idUsuario,
+      );
+
+      throw new CustomError({
+        statusCode: HttpStatusCode.UNAUTHORIZED,
+        message: "Brecha de seguridad detectada. Inicie sesión nuevamente.",
+      });
+    }
+
+    return {
+      esConcurrente: false,
+    };
   }
 }

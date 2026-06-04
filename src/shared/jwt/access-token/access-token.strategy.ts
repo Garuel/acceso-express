@@ -13,7 +13,6 @@ export class AccessTokenStrategy extends Strategy {
       },
       (payload: { username: string }, done: VerifiedCallback) => {
         try {
-          // You would typically call a service here to validate the user exist
           done(null, payload);
         } catch (error) {
           done(error, false);

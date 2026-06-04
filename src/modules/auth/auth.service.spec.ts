@@ -1,6 +1,8 @@
 import "reflect-metadata";
 import { AuthService } from "./auth.service";
 import { HttpStatusCode } from "../../shared/domain/enum/custom-error.enum";
+import { RefreshInfoToken } from "./dto/login.dto";
+import { CustomError } from "../../shared/domain/classes/custom-error.class";
 
 describe("AuthService", () => {
   let service: AuthService;
@@ -44,12 +46,16 @@ describe("AuthService", () => {
     eliminarPorId: jest.fn(),
   };
 
+  const refreshJwtService = {
+    verify: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     service = new AuthService(
       mockDataSource as any,
       {} as any, // accessJwt
-      {} as any, // refreshJwt
+      refreshJwtService as any, // refreshJwt
       mockUsuarioRepo as any, // usuarioRepo
       mockLoginRepo as any, // loginRepo
       mockPersonaRepo as any, // personaRepo
@@ -109,5 +115,60 @@ describe("AuthService", () => {
         "sebastiandomenack",
       );
     });
+  });
+
+  describe("refresh()", () => {
+    it("debería lanzar error 401 si el codigo del antiguo refresh token no es válido", async () => {
+
+      const oldRefreshToken = "refreshToken-123456789";
+      jest.spyOn(refreshJwtService, 'verify').mockReturnValue({
+        usuarioId: 'user-123'
+      });
+      await expect(service.refresh(oldRefreshToken)).rejects.toThrow(
+        new CustomError({
+          statusCode: HttpStatusCode.UNAUTHORIZED,
+          message: "Token inválido",
+        })
+      );
+    });
+    it("debería lanzar error 401 si la sesión es inválida (no existe en la base de datos)", async () => {
+
+      const oldRefreshToken = "refreshToken-valido"
+
+      refreshJwtService.verify.mockReturnValue({ codigo: "COD-123" })
+
+      mockUsuarioRefreshTokenRepo.obtenerPorToken.mockReturnValue(null)
+
+      await expect(service.refresh(oldRefreshToken)).rejects.toThrow(
+        new CustomError({
+          statusCode: HttpStatusCode.UNAUTHORIZED,
+          message: "Sesión expirada o inválida",
+        })
+      );
+
+    })
+
+    it("debería lanzar error 401 si el token existe pero la fecha de expiración ya pasó", async () => {
+      const oldRefreshToken = "refreshToken-expirado";
+      refreshJwtService.verify.mockReturnValue({ codigo: "COD-123" });
+
+      const fechaPasada = new Date();
+      fechaPasada.setHours(fechaPasada.getHours() - 1);
+
+      mockUsuarioRefreshTokenRepo.obtenerPorToken.mockResolvedValue({
+        id: 1,
+        token: oldRefreshToken,
+        fechaExpiracion: fechaPasada,
+      });
+
+      await expect(service.refresh(oldRefreshToken)).rejects.toThrow(
+        new CustomError({
+          statusCode: HttpStatusCode.UNAUTHORIZED,
+          message: "Sesión expirada o inválida",
+        }),
+      );
+    })
+
+
   });
 });

@@ -3,96 +3,92 @@ import { EstadoUsuarioEnum } from "../../../shared/domain/enum/estado-usuario.en
 import { ValidateUtil } from "./validate.util";
 import { UsuarioEntity } from "../../../shared/database/entities/core/usuario.entity";
 import { RegisterDto } from "../dto/register.dto";
+import { CustomError } from "../../../shared/domain/classes/custom-error.class";
+import { TIEMPO_GRACIA_SEGUNDOS } from "../constants/tiempo-max-gracia-token-refresh.constat";
+import { UsuarioRefreshTokenEntity } from "../../../shared/database/entities/core/usuario-refresh-token.entity";
+import { JwtService } from "../../jwt/jwt.service";
+import { UsuarioRepository } from "../../../shared/database/repositories/core/usuario/usuario.repository";
+import { UsuarioRefreshTokenRepository } from "../../../shared/database/repositories/core/usuario-refresh-token/usuario-refresh-token.repository";
 
 describe("ValidateUtil", () => {
-  describe("validateEstadoUsuario", () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("validateEstadoUsuario", () => {
     it("debería retornar true si el estado es Activo", () => {
-      const result = ValidateUtil.validateEstadoUsuario(
-        EstadoUsuarioEnum.Activo,
-      );
+      const result = ValidateUtil.validateEstadoUsuario(EstadoUsuarioEnum.Activo);
       expect(result.esValido).toBe(true);
     });
 
     it("debería lanzar CustomError 409 si está bloqueado temporalmente", () => {
-      try {
-        ValidateUtil.validateEstadoUsuario(
-          EstadoUsuarioEnum.BloqueadoTemporalmente,
-        );
-      } catch (error: any) {
-        expect(error.data.statusCode).toBe(HttpStatusCode.CONFLICT);
-        expect(error.data.message).toBe(
-          "El usuario está bloqueado temporalmente",
-        );
-      }
+      expect(() =>
+        ValidateUtil.validateEstadoUsuario(EstadoUsuarioEnum.BloqueadoTemporalmente)
+      ).toThrow(
+        new CustomError({
+          statusCode: HttpStatusCode.CONFLICT,
+          message: "El usuario está bloqueado temporalmente",
+        })
+      );
     });
 
     it("debería lanzar CustomError 409 si está bloqueado indefinidamente", () => {
-      try {
-        ValidateUtil.validateEstadoUsuario(
-          EstadoUsuarioEnum.BloqueadoIndefinidamente,
-        );
-      } catch (error: any) {
-        expect(error.data.statusCode).toBe(HttpStatusCode.CONFLICT);
-        expect(error.data.message).toBe(
-          "El usuario está bloqueado indefinidamente",
-        );
-      }
+      expect(() =>
+        ValidateUtil.validateEstadoUsuario(EstadoUsuarioEnum.BloqueadoIndefinidamente)
+      ).toThrow(
+        new CustomError({
+          statusCode: HttpStatusCode.CONFLICT,
+          message: "El usuario está bloqueado indefinidamente",
+        })
+      );
     });
 
     it("debería lanzar CustomError 409 si está deshabilitado", () => {
-      try {
-        ValidateUtil.validateEstadoUsuario(EstadoUsuarioEnum.Deshabilitado);
-      } catch (error: any) {
-        expect(error.data.statusCode).toBe(HttpStatusCode.CONFLICT);
-        expect(error.data.message).toBe("El usuario está deshabilitado");
-      }
+      expect(() =>
+        ValidateUtil.validateEstadoUsuario(EstadoUsuarioEnum.Deshabilitado)
+      ).toThrow(
+        new CustomError({
+          statusCode: HttpStatusCode.CONFLICT,
+          message: "El usuario está deshabilitado",
+        })
+      );
     });
   });
+
   describe("validarExistenciaUsuario", () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
+    it("debería retornar true si el usuario existe", () => {
+      const usuarioMock = {
+        id: 1,
+        username: "username",
+      } as UsuarioEntity;
+
+      const result = ValidateUtil.validarExistenciaUsuario(usuarioMock);
+
+      expect(result.esValido).toBe(true);
     });
 
-    it("debería retornar true si el usuario existe", () => {
-      try {
-        ValidateUtil.validarExistenciaUsuario({
-          id: 1,
-          username: "username",
-          password: "password",
-          idPersona: 1,
-          idEstado: 1,
-          publicKey: "publicKey",
-          intentosFallidos: 0,
-        } as unknown as UsuarioEntity);
-      } catch (error) {}
-    });
     it("debería lanzar CustomError 404 si el usuario no existe", () => {
-      try {
-        ValidateUtil.validarExistenciaUsuario(null);
-      } catch (error: any) {
-        expect(error.data.statusCode).toBe(HttpStatusCode.NOT_FOUND);
-        expect(error.data.message).toBe("El usuario no está registrado");
-      }
+      expect(() =>
+        ValidateUtil.validarExistenciaUsuario(null)
+      ).toThrow(
+        new CustomError({
+          statusCode: HttpStatusCode.NOT_FOUND,
+          message: "El usuario no está registrado",
+        })
+      );
     });
   });
 
   describe("existeUsuarioARegistrar", () => {
-    const mockUsuarioRepo = {
-      existeUsuario: jest.fn(),
-    };
+    const mockUsuarioRepo = { existeUsuario: jest.fn() };
+    const mockPersonaRepo = { existePersonaPorNumeroDocumento: jest.fn() };
 
-    const mockPersonaRepo = {
-      existePersonaPorNumeroDocumento: jest.fn(),
-    };
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
+    const registerDtoMock = {
+      username: "username",
+      numeroDocumento: "12345678",
+    } as RegisterDto;
 
-    //CAMINO FELIZ
     it("Debe retornar true si no existe usuario y persona", async () => {
       mockUsuarioRepo.existeUsuario.mockResolvedValue(false);
       mockPersonaRepo.existePersonaPorNumeroDocumento.mockResolvedValue(false);
@@ -100,21 +96,13 @@ describe("ValidateUtil", () => {
       const result = await ValidateUtil.existeUsuarioARegistrar(
         mockUsuarioRepo as any,
         mockPersonaRepo as any,
-        {
-          username: "username",
-          password: "password",
-          numeroDocumento: "numeroDocumento",
-          idTipoDocumento: 1,
-          nombres: "nombres",
-          apellidoPaterno: "apellidoPaterno",
-          apellidoMaterno: "apellidoMaterno",
-        } as RegisterDto,
+        registerDtoMock,
       );
 
       expect(result.esValido).toBe(true);
     });
 
-    it("Debe retornar bad request  si existe usuario", async () => {
+    it("Debe retornar bad request si existe usuario", async () => {
       mockUsuarioRepo.existeUsuario.mockResolvedValue(true);
       mockPersonaRepo.existePersonaPorNumeroDocumento.mockResolvedValue(false);
 
@@ -122,22 +110,14 @@ describe("ValidateUtil", () => {
         ValidateUtil.existeUsuarioARegistrar(
           mockUsuarioRepo as any,
           mockPersonaRepo as any,
-          {
-            username: "username",
-            password: "password",
-            numeroDocumento: "numeroDocumento",
-            idTipoDocumento: 1,
-            nombres: "nombres",
-            apellidoPaterno: "apellidoPaterno",
-            apellidoMaterno: "apellidoMaterno",
-          } as RegisterDto,
-        ),
-      ).rejects.toMatchObject({
-        data: {
+          registerDtoMock,
+        )
+      ).rejects.toThrow(
+        new CustomError({
           statusCode: HttpStatusCode.BAD_REQUEST,
           message: "El usuario ya existe en el sistema",
-        },
-      });
+        })
+      );
     });
 
     it("Debe retornar bad request si existe persona", async () => {
@@ -148,22 +128,113 @@ describe("ValidateUtil", () => {
         ValidateUtil.existeUsuarioARegistrar(
           mockUsuarioRepo as any,
           mockPersonaRepo as any,
-          {
-            username: "username",
-            password: "password",
-            numeroDocumento: "numeroDocumento",
-            idTipoDocumento: 1,
-            nombres: "nombres",
-            apellidoPaterno: "apellidoPaterno",
-            apellidoMaterno: "apellidoMaterno",
-          } as RegisterDto,
-        ),
-      ).rejects.toMatchObject({
-        data: {
+          registerDtoMock,
+        )
+      ).rejects.toThrow(
+        new CustomError({
           statusCode: HttpStatusCode.BAD_REQUEST,
           message: "La persona ya existe en el sistema",
-        },
-      });
+        })
+      );
     });
   });
+
+  describe("validarTiempoDeGracia", () => {
+
+    const usuarioRepositoryMock = { getUsuarioPorId: jest.fn() };
+    const usuarioRefreshTokenRepositoryMock = { eliminarTodosLosTokensDelUsuario: jest.fn() };
+    const accessJwtServiceMock = { sign: jest.fn() };
+    const idUsuarioMock = 1;
+
+
+    it("Debe retornar 401 si intenta usar un token usado tiempo atras", async () => {
+      usuarioRefreshTokenRepositoryMock.eliminarTodosLosTokensDelUsuario.mockResolvedValue({});
+      usuarioRepositoryMock.getUsuarioPorId.mockResolvedValue({});
+      accessJwtServiceMock.sign.mockReturnValue("token");
+
+      const segundosDesdeElPrimerUso = TIEMPO_GRACIA_SEGUNDOS + 100;
+      const usuarioRefreshTokenEntityMock = {
+        fechaUso: new Date(Date.now() - segundosDesdeElPrimerUso * 1000),
+      } as UsuarioRefreshTokenEntity;
+
+
+      await expect(
+        ValidateUtil.validarTiempoDeGracia(
+          usuarioRefreshTokenEntityMock,
+          usuarioRepositoryMock as any,
+          usuarioRefreshTokenRepositoryMock as any,
+          accessJwtServiceMock as any,
+          idUsuarioMock,
+        )
+      ).rejects.toThrow(
+        new CustomError({
+          statusCode: HttpStatusCode.UNAUTHORIZED,
+          message: "Brecha de seguridad detectada. Inicie sesión nuevamente.",
+        })
+      );
+    })
+
+    it("Debe retornar bien los tokens porque es una petición concurrente", async () => {
+      usuarioRepositoryMock.getUsuarioPorId.mockResolvedValue({
+        id: 1,
+        username: "test",
+        idEstado: 1,
+        publicKey: "mock-public-key",
+        persona: {
+          email: "test@correo.com",
+          nombres: "Juan",
+          apellidoPaterno: "Perez",
+          apellidoMaterno: "Gomez",
+          tipoDocumento: {
+            id: 1,
+            nombre: 'DNI'
+          }
+        }
+      });
+
+      accessJwtServiceMock.sign.mockReturnValue("token");
+
+      const segundosDesdeElPrimerUso = TIEMPO_GRACIA_SEGUNDOS - 10;
+      const usuarioRefreshTokenEntityMock = {
+        fechaUso: new Date(Date.now() - segundosDesdeElPrimerUso * 1000),
+      } as UsuarioRefreshTokenEntity;
+
+      const result = await ValidateUtil.validarTiempoDeGracia(
+        usuarioRefreshTokenEntityMock,
+        usuarioRepositoryMock as any,
+        usuarioRefreshTokenRepositoryMock as any,
+        accessJwtServiceMock as any,
+        idUsuarioMock,
+      )
+      expect(
+        result
+      ).toEqual({
+        esConcurrente: true,
+        tokens: {
+          accessToken: "token",
+          refreshToken: usuarioRefreshTokenEntityMock.refreshToken,
+        },
+      });
+    })
+
+    it("Debe retornar concurencia false si es la primera vez que genera el token", async () => {
+      const usuarioRefreshTokenEntityMock = {
+        fechaUso: null,
+      } as UsuarioRefreshTokenEntity;
+
+      const result = await ValidateUtil.validarTiempoDeGracia(
+        usuarioRefreshTokenEntityMock,
+        usuarioRepositoryMock as any,
+        usuarioRefreshTokenRepositoryMock as any,
+        accessJwtServiceMock as any,
+        idUsuarioMock,
+      )
+
+      expect(
+        result
+      ).toEqual({
+        esConcurrente: false,
+      });
+    })
+  })
 });

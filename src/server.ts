@@ -5,6 +5,7 @@ import { globalErrorHandler } from "./shared/middlewares/error.middleware";
 import authRouter from "./modules/auth/auth.route";
 import profileRouter from "./modules/profile/profile.route";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ const app: Application = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(cookieParser());
 app.use(`${process.env.CONTEXT}/auth`, authRouter);
 app.use(`${process.env.CONTEXT}/profile`, profileRouter);
 

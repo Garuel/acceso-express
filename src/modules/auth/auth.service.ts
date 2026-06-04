@@ -38,89 +38,94 @@ export class AuthService {
     private readonly loginUsuarioRepoInyectado: LoginUsuarioRequestRepository,
     private readonly registrarUsuarioRepoInyectado: RegistrarUsuarioRequestRepository,
     private readonly usuarioRefreshTokenRepositoryInyectado: UsuarioRefreshTokenRepository,
-  ) {}
+  ) { }
 
   async login(request: LoginDto) {
-    const loginResponse = await this.dataSource.transaction<ResponseAPI>(
-      async (manager) => {
-        const usuarioRepository =
-          this.usuarioRepoInyectado.setTransactionManager(manager);
-        const loginRepository =
-          this.loginRepoInyectado.setTransactionManager(manager);
-        const loginUsuarioRepository =
-          this.loginUsuarioRepoInyectado.setTransactionManager(manager);
-        const usuarioRefreshTokenRepository =
-          this.usuarioRefreshTokenRepositoryInyectado.setTransactionManager(
-            manager,
-          );
-
-        if (await loginUsuarioRepository.existe(request.rqUUID)) {
-          throw new CustomError({
-            statusCode: HttpStatusCode.CONFLICT,
-            titulo: "Petición ya atendida",
-            message: "La petición ya fue atendida, recargue la página",
-          });
-        }
-
-        logger.info("Obteniendo data password...");
-        const dataPassword = await AuthUtil.obtenerPassword(
-          loginRepository,
-          request.username,
-          request.password,
+    const loginResponse = await this.dataSource.transaction<
+      ResponseAPI<TokensInterface>
+    >(async (manager) => {
+      const usuarioRepository =
+        this.usuarioRepoInyectado.setTransactionManager(manager);
+      const loginRepository =
+        this.loginRepoInyectado.setTransactionManager(manager);
+      const loginUsuarioRepository =
+        this.loginUsuarioRepoInyectado.setTransactionManager(manager);
+      const usuarioRefreshTokenRepository =
+        this.usuarioRefreshTokenRepositoryInyectado.setTransactionManager(
+          manager,
         );
-        logger.info("Data password obtenido");
 
-        logger.info("Obteniendo usuario...");
-        const usuario = await usuarioRepository.getUsuarioPorUsername(
-          request.username,
-        );
-        logger.info("Usuario obtenido");
-
-        ValidateUtil.validarExistenciaUsuario(usuario);
-
-        ValidateUtil.validateEstadoUsuario(usuario!.idEstado);
-
-        const matchesPassword = await compare(
-          dataPassword[1],
-          usuario!.password!,
-        );
-        if (!matchesPassword) {
-          throw new CustomError({
-            statusCode: HttpStatusCode.UNAUTHORIZED,
-            message: "Contraseña incorrecta",
-          });
-        }
-
-        const codigo = BuildUtil.buildRandomEnRango(100000, 999999).toString();
-        const usuarioInfoToken = BuildUtil.buildUsuarioInfoToken(usuario!);
-
-        const refreshInfo: RefreshInfoToken = {
-          idUsuario: usuario!.id,
-          codigo,
-        };
-
-        const tokens = this.generateTokens(usuarioInfoToken, refreshInfo);
-        logger.info("Insertando rquuid...");
-        await loginUsuarioRepository.insertar([
-          { uuid: request.rqUUID, fecha: new Date() },
-        ]);
-        logger.info("Rquuid insertado");
-
-        await usuarioRefreshTokenRepository.create({
-          idUsuario: usuario!.id,
-          codigo,
-          refreshToken: tokens.refreshToken,
-          fechaExpiracion: this.getRefreshTokenExpiration(),
+      if (await loginUsuarioRepository.existe(request.rqUUID)) {
+        throw new CustomError({
+          statusCode: HttpStatusCode.CONFLICT,
+          titulo: "Petición ya atendida",
+          message: "La petición ya fue atendida, recargue la página",
         });
+      }
 
-        return {
-          message: "Login exitoso",
-          data: {
-            tokens,
-          },
-        };
-      },
-    );
+      logger.info("Obteniendo data password...");
+      const dataPassword = await AuthUtil.obtenerPassword(
+        loginRepository,
+        request.username,
+        request.password,
+      );
+      logger.info("Data password obtenido");
+
+      logger.info("Obteniendo usuario...");
+      const usuario = await usuarioRepository.getUsuarioPorUsername(
+        request.username,
+      );
+      logger.info("Usuario obtenido");
+
+      ValidateUtil.validarExistenciaUsuario(usuario);
+
+      ValidateUtil.validateEstadoUsuario(usuario!.idEstado);
+
+      const matchesPassword = await compare(
+        dataPassword[1],
+        usuario!.password!,
+      );
+      if (!matchesPassword) {
+        throw new CustomError({
+          statusCode: HttpStatusCode.UNAUTHORIZED,
+          message: "Contraseña incorrecta",
+        });
+      }
+
+      logger.info("generando código...");
+
+      const codigo = BuildUtil.buildRandomEnRango(100000, 999999).toString();
+
+      logger.info("Generando usuario info token...");
+      const usuarioInfoToken = BuildUtil.buildUsuarioInfoToken(usuario!);
+
+      const refreshInfo: RefreshInfoToken = {
+        idUsuario: usuario!.id,
+        codigo,
+      };
+      logger.info("generando tokens...");
+      const tokens = this.generateTokens(usuarioInfoToken, refreshInfo);
+      logger.info("Insertando rquuid...");
+      await loginUsuarioRepository.insertar([
+        { uuid: request.rqUUID, fecha: new Date() },
+      ]);
+      logger.info("Rquuid insertado");
+
+      await usuarioRefreshTokenRepository.create({
+        idUsuario: usuario!.id,
+        codigo,
+        refreshToken: tokens.refreshToken,
+        fechaExpiracion: this.getRefreshTokenExpiration(),
+      });
+
+      return {
+        message: "Login exitoso",
+        data: {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        },
+      };
+    });
     return loginResponse;
   }
 
@@ -226,80 +231,100 @@ export class AuthService {
     return plainKey;
   }
 
-  async refresh(oldRefreshToken: string): Promise<ResponseAPI> {
-    const response = await this.dataSource.transaction<ResponseAPI>(
-      async (manager) => {
-        const usuarioRefreshTokenRepository =
-          this.usuarioRefreshTokenRepositoryInyectado.setTransactionManager(
-            manager,
-          );
-        const usuarioRepository =
-          this.usuarioRepoInyectado.setTransactionManager(manager);
-
-        logger.verbose("=====REFRESH=====");
-        const decoded = this.refreshJwtService.verify(
-          oldRefreshToken,
-        ) as RefreshInfoToken;
-
-        logger.info("Token decodificado correctamente");
-        if (!decoded.codigo) {
-          throw new CustomError({
-            statusCode: HttpStatusCode.UNAUTHORIZED,
-            message: "Token inválido",
-          });
-        }
-
-        logger.info("Buscando token en BD");
-        const tokenDb =
-          await usuarioRefreshTokenRepository.obtenerPorToken(oldRefreshToken);
-        logger.info("Token encontrado en BD");
-
-        if (!tokenDb || tokenDb.fechaExpiracion < new Date()) {
-          throw new CustomError({
-            statusCode: HttpStatusCode.UNAUTHORIZED,
-            message: "Sesión expirada o inválida",
-          });
-        }
-
-        logger.info("Borrando el anterior refresh token");
-        await usuarioRefreshTokenRepository.eliminarPorId(tokenDb.id);
-        logger.info("Refresh token eliminado correctamente");
-
-        logger.info("Obteniendo usuario por id...");
-        const usuario = await usuarioRepository.getUsuarioPorId(
-          decoded.idUsuario,
+  async refresh(
+    oldRefreshToken: string,
+  ): Promise<ResponseAPI<TokensInterface>> {
+    const response = await this.dataSource.transaction<
+      ResponseAPI<TokensInterface>
+    >(async (manager) => {
+      const usuarioRefreshTokenRepository =
+        this.usuarioRefreshTokenRepositoryInyectado.setTransactionManager(
+          manager,
         );
-        logger.info("Usuario obtenido correctamente");
+      const usuarioRepository =
+        this.usuarioRepoInyectado.setTransactionManager(manager);
 
-        logger.info("Construyendo usuario info token...");
-        const usuarioInfoToken = BuildUtil.buildUsuarioInfoToken(usuario!);
-        logger.info("Usuario info token construido correctamente");
+      logger.verbose("=====REFRESH=====");
+      const decoded = this.refreshJwtService.verify(
+        oldRefreshToken,
+      ) as RefreshInfoToken;
 
-        const newAccessToken = this.accessJwtService.sign(usuarioInfoToken);
-        logger.info("Nuevo access token construido correctamente");
-
-        const Nuevocodigo = BuildUtil.buildRandomEnRango(
-          100000,
-          999999,
-        ).toString();
-        const tokens = this.generateTokens(usuarioInfoToken, {
-          idUsuario: usuario!.id,
-          codigo: Nuevocodigo,
+      logger.info("Token decodificado correctamente");
+      if (!decoded.codigo) {
+        throw new CustomError({
+          statusCode: HttpStatusCode.UNAUTHORIZED,
+          message: "Token inválido",
         });
+      }
 
-        await usuarioRefreshTokenRepository.create({
-          idUsuario: usuario!.id,
-          codigo: decoded.codigo,
-          refreshToken: tokens.refreshToken,
-          fechaExpiracion: this.getRefreshTokenExpiration(),
+      logger.info("Buscando token en BD");
+      const tokenDb =
+        await usuarioRefreshTokenRepository.obtenerPorToken(oldRefreshToken);
+      logger.info("Token encontrado en BD");
+
+      if (!tokenDb || tokenDb.fechaExpiracion < new Date()) {
+        throw new CustomError({
+          statusCode: HttpStatusCode.UNAUTHORIZED,
+          message: "Sesión expirada o inválida",
         });
+      }
 
+      const controlGracia = await ValidateUtil.validarTiempoDeGracia(
+        tokenDb,
+        usuarioRepository,
+        usuarioRefreshTokenRepository,
+        this.accessJwtService,
+        decoded.idUsuario
+      );
+
+      if (controlGracia.esConcurrente && controlGracia.tokens) {
         return {
-          message: "Token renovado",
-          data: { accessToken: newAccessToken },
+          message: "Token renovado (Concurrencia)",
+          data: {
+            accessToken: controlGracia.tokens.accessToken!,
+            refreshToken: controlGracia.tokens.refreshToken!,
+          },
         };
-      },
-    );
+      }
+
+      logger.info("Marcando refresh token anterior como usado en BD");
+      await usuarioRefreshTokenRepository.marcarComoUsado(tokenDb.id);
+
+      logger.info("Obteniendo usuario por id...");
+      const usuario = await usuarioRepository.getUsuarioPorId(
+        decoded.idUsuario,
+      );
+      logger.info("Usuario obtenido correctamente");
+
+      logger.info("Construyendo usuario info token...");
+      const usuarioInfoToken = BuildUtil.buildUsuarioInfoToken(usuario!);
+      logger.info("Usuario info token construido correctamente");
+
+
+      const nuevocodigo = BuildUtil.buildRandomEnRango(
+        100000,
+        999999,
+      ).toString();
+      const tokens = this.generateTokens(usuarioInfoToken, {
+        idUsuario: usuario!.id,
+        codigo: nuevocodigo,
+      });
+
+      await usuarioRefreshTokenRepository.create({
+        idUsuario: usuario!.id,
+        codigo: nuevocodigo,
+        refreshToken: tokens.refreshToken,
+        fechaExpiracion: this.getRefreshTokenExpiration(),
+      });
+
+      return {
+        message: "Token renovado",
+        data: {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        },
+      };
+    });
     return response;
   }
 

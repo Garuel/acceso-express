@@ -4,6 +4,7 @@ import { ValidationMiddleware } from "../../shared/middlewares/class-validator.m
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { PreRegisterDto } from "./dto/pre-register.dto";
+import { RefreshDto } from "./dto/refresh.dto";
 
 const router = Router();
 
@@ -23,5 +24,7 @@ router.post(
   ValidationMiddleware(PreRegisterDto),
   authController.preRegister.bind(authController),
 );
+
+router.get("/refresh", authController.refresh.bind(authController));
 
 export default router;

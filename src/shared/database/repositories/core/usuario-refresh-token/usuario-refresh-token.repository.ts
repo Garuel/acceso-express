@@ -21,8 +21,9 @@ export class UsuarioRefreshTokenRepository {
   }
 
   setTransactionManager(manager: EntityManager) {
-    this.repo = manager.getRepository(UsuarioRefreshTokenEntity);
-    return this;
+    const nuevoRepo = new UsuarioRefreshTokenRepository(this.connection);
+    nuevoRepo.repo = manager.getRepository(UsuarioRefreshTokenEntity);
+    return nuevoRepo;
   }
 
   create(data: UsuarioRefreshTokenInsert): Promise<UsuarioRefreshTokenEntity> {
@@ -55,6 +56,7 @@ export class UsuarioRefreshTokenRepository {
         "usuarioRefreshToken.idUsuario",
         "usuarioRefreshToken.refreshToken",
         "usuarioRefreshToken.fechaExpiracion",
+        "usuarioRefreshToken.fechaUso",
       ])
       .where("usuarioRefreshToken.refreshToken = :refreshToken", {
         refreshToken,
@@ -67,6 +69,23 @@ export class UsuarioRefreshTokenRepository {
       .createQueryBuilder()
       .delete()
       .where("id = :id", { id })
+      .execute();
+  }
+
+  marcarComoUsado(id: number): Promise<UpdateResult> {
+    return this.repo
+      .createQueryBuilder()
+      .update()
+      .set({ fechaUso: new Date() })
+      .where("id = :id", { id })
+      .execute();
+  }
+
+  eliminarTodosLosTokensDelUsuario(idUsuario: number) {
+    return this.repo
+      .createQueryBuilder()
+      .delete()
+      .where("idUsuario = :idUsuario", { idUsuario })
       .execute();
   }
 }

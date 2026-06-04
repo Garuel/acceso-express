@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { HttpStatusCode } from "../../shared/domain/enum/custom-error.enum";
 import { TipoRespuestaEnum } from "../../shared/domain/enum/tipo-alerta.enum";
+import { COOKIE_MAX_AGE } from "./constants/cookie-max-age.constant";
 
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -17,11 +18,19 @@ export class AuthController {
         userAgent: userAgent,
       });
 
+      const refreshToken = result.data?.refreshToken;
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: COOKIE_MAX_AGE,
+      });
+
       res.status(HttpStatusCode.OK).json({
         message: "Login exitoso",
         tipoRespuesta: TipoRespuestaEnum.Success,
         title: "Login",
-        data: result,
+        data: result.data?.accessToken,
       });
     } catch (error) {
       next(error);
@@ -58,5 +67,28 @@ export class AuthController {
     } catch (error) {
       next(error);
     }
+  }
+
+  async refresh(req: Request, res: Response) {
+    const oldRefreshToken = req.cookies.refreshToken;
+
+    if (!oldRefreshToken) {
+      return res.status(401).json({ message: "No hay token de refresco" });
+    }
+
+    const result = await this.authService.refresh(oldRefreshToken);
+
+    res.cookie("refreshToken", result.data?.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: COOKIE_MAX_AGE,
+    });
+
+    return res.status(200).json({
+      statusCode: 200,
+      message: "Token renovado",
+      data: { accessToken: result.data?.accessToken },
+    });
   }
 }

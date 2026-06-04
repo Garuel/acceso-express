@@ -8,16 +8,14 @@ import { LocalStorageService } from "../../shared/infrastructure/storage/local-s
 
 dotenv.config();
 
-const accessJwtService = new JwtService(process.env.JWT_ACCESS_SECRET!, "15m");
-const refreshJwtService = new JwtService(process.env.JWT_REFRESH_SECRET!, "7d");
+
 const storageService = new LocalStorageService();
 
 // const storageService = process.env.NODE_ENV === 'production'
 //   ? new S3StorageService()
 //   : new LocalStorageService();
 
-const authGuard = new AuthGuard(accessJwtService);
 const profileService = new ProfileService(DataSourceConfig, storageService);
 const profileController = new ProfileController(profileService);
 
-export { profileController, authGuard };
+export { profileController };

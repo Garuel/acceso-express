@@ -25,6 +25,9 @@ export class UsuarioRefreshTokenEntity extends BaseAuditoriaEntity {
   @Column({ name: "fecha_expiracion" })
   fechaExpiracion!: Date;
 
+  @Column({ name: "fecha_uso", type: "timestamp", nullable: true })
+  fechaUso!: Date | null;
+
   @ManyToOne(() => UsuarioEntity, (usuario) => usuario.usuarioRefreshTokens)
   @JoinColumn({ name: "id_usuario" })
   usuario!: UsuarioEntity;
