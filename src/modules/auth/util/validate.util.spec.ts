@@ -1,14 +1,11 @@
+import { UsuarioRefreshTokenEntity } from "../../../shared/database/entities/core/usuario-refresh-token.entity";
+import { UsuarioEntity } from "../../../shared/database/entities/core/usuario.entity";
+import { CustomError } from "../../../shared/domain/classes/custom-error.class";
 import { HttpStatusCode } from "../../../shared/domain/enum/custom-error.enum";
 import { EstadoUsuarioEnum } from "../../../shared/domain/enum/estado-usuario.enum";
-import { ValidateUtil } from "./validate.util";
-import { UsuarioEntity } from "../../../shared/database/entities/core/usuario.entity";
-import { RegisterDto } from "../dto/register.dto";
-import { CustomError } from "../../../shared/domain/classes/custom-error.class";
+import { RegisterDto } from "../application/use-cases/register/dto/register.dto";
 import { TIEMPO_GRACIA_SEGUNDOS } from "../constants/tiempo-max-gracia-token-refresh.constat";
-import { UsuarioRefreshTokenEntity } from "../../../shared/database/entities/core/usuario-refresh-token.entity";
-import { JwtService } from "../../jwt/jwt.service";
-import { UsuarioRepository } from "../../../shared/database/repositories/core/usuario/usuario.repository";
-import { UsuarioRefreshTokenRepository } from "../../../shared/database/repositories/core/usuario-refresh-token/usuario-refresh-token.repository";
+import { ValidateUtil } from "./validate.util";
 
 describe("ValidateUtil", () => {
 

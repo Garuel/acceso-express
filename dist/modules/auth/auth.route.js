@@ -1,13 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const auth_container_1 = require("./auth.container");
 const class_validator_middleware_1 = require("../../shared/middlewares/class-validator.middleware");
-const register_dto_1 = require("./dto/register.dto");
+const auth_container_1 = require("./auth.container");
+const register_dto_1 = require("./application/use-cases/register/dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const pre_register_dto_1 = require("./dto/pre-register.dto");
 const router = (0, express_1.Router)();
 router.post("/login", (0, class_validator_middleware_1.ValidationMiddleware)(login_dto_1.LoginDto), auth_container_1.authController.login.bind(auth_container_1.authController));
 router.post("/register", (0, class_validator_middleware_1.ValidationMiddleware)(register_dto_1.RegisterDto), auth_container_1.authController.register.bind(auth_container_1.authController));
 router.post("/pre-register", (0, class_validator_middleware_1.ValidationMiddleware)(pre_register_dto_1.PreRegisterDto), auth_container_1.authController.preRegister.bind(auth_container_1.authController));
+router.get("/refresh", auth_container_1.authController.refresh.bind(auth_container_1.authController));
 exports.default = router;

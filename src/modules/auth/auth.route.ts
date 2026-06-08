@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { authController } from "./auth.container";
 import { ValidationMiddleware } from "../../shared/middlewares/class-validator.middleware";
-import { RegisterDto } from "./dto/register.dto";
+import { authController } from "./auth.container";
+
+import { RegisterDto } from "./application/use-cases/register/dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { PreRegisterDto } from "./dto/pre-register.dto";
-import { RefreshDto } from "./dto/refresh.dto";
 
 const router = Router();
 

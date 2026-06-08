@@ -2,7 +2,7 @@ import { PersonaRepository } from "../../../shared/database/repositories/core/pe
 import { UsuarioRepository } from "../../../shared/database/repositories/core/usuario/usuario.repository";
 import { CustomError } from "../../../shared/domain/classes/custom-error.class";
 import { HttpStatusCode } from "../../../shared/domain/enum/custom-error.enum";
-import { RegisterDto } from "../dto/register.dto";
+
 import { logger } from "../../../shared/infrastructure/utils/logger.util";
 import { UsuarioEntity } from "../../../shared/database/entities/core/usuario.entity";
 import { ValidateResult } from "../../../shared/domain/interfaces/validate-result.interface";
@@ -13,6 +13,7 @@ import { BuildUtil } from "../../../shared/infrastructure/utils/build.util";
 import { UsuarioRefreshTokenRepository } from "../../../shared/database/repositories/core/usuario-refresh-token/usuario-refresh-token.repository";
 import { JwtService } from "../../jwt/jwt.service";
 import { ValidateTiempoGraciaInterface } from "../interface/validate-tiempo-gracia.interface";
+import { RegisterDto } from "../application/use-cases/register/dto/register.dto";
 
 export namespace ValidateUtil {
   export function validateEstadoUsuario(idEstado: number): ValidateResult {

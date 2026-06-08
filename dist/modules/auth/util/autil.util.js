@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthUtil = void 0;
 const custom_error_class_1 = require("../../../shared/domain/classes/custom-error.class");
 const custom_error_enum_1 = require("../../../shared/domain/enum/custom-error.enum");
+const date_util_1 = require("../../../shared/infrastructure/utils/date.util");
 const encrypt_util_1 = require("../../../shared/infrastructure/utils/encrypt.util");
 const logger_util_1 = require("../../../shared/infrastructure/utils/logger.util");
 var AuthUtil;
@@ -32,4 +33,8 @@ var AuthUtil;
         return [login.confirmPassword, passwordDecrypted];
     }
     AuthUtil.obtenerPassword = obtenerPassword;
+    function getRefreshTokenExpiration() {
+        return date_util_1.DateUtil.addTimeToCurrentDate(process.env.JWT_REFRESH_EXPIRES_IN || "7d");
+    }
+    AuthUtil.getRefreshTokenExpiration = getRefreshTokenExpiration;
 })(AuthUtil || (exports.AuthUtil = AuthUtil = {}));

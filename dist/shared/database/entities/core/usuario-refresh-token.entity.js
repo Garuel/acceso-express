@@ -18,6 +18,7 @@ let UsuarioRefreshTokenEntity = class UsuarioRefreshTokenEntity extends auditori
     idUsuario;
     refreshToken;
     fechaExpiracion;
+    fechaUso;
     usuario;
 };
 exports.UsuarioRefreshTokenEntity = UsuarioRefreshTokenEntity;
@@ -37,6 +38,10 @@ __decorate([
     (0, typeorm_1.Column)({ name: "fecha_expiracion" }),
     __metadata("design:type", Date)
 ], UsuarioRefreshTokenEntity.prototype, "fechaExpiracion", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "fecha_uso", type: "timestamp", nullable: true }),
+    __metadata("design:type", Object)
+], UsuarioRefreshTokenEntity.prototype, "fechaUso", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => usuario_entity_1.UsuarioEntity, (usuario) => usuario.usuarioRefreshTokens),
     (0, typeorm_1.JoinColumn)({ name: "id_usuario" }),

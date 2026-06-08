@@ -36,17 +36,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.JwtService = void 0;
 const jwt = __importStar(require("jsonwebtoken"));
 class JwtService {
-    secret;
+    secretOrKey;
     expires;
-    constructor(secret, expires) {
-        this.secret = secret;
+    algorithm;
+    constructor(secretOrKey, expires, algorithm = "HS256") {
+        this.secretOrKey = secretOrKey;
         this.expires = expires;
+        this.algorithm = algorithm;
     }
     sign(payload) {
-        return jwt.sign(payload, this.secret, { expiresIn: this.expires });
+        return jwt.sign(payload, this.secretOrKey, {
+            algorithm: this.algorithm,
+            expiresIn: this.expires,
+        });
     }
     verify(token) {
-        return jwt.verify(token, this.secret);
+        return jwt.verify(token, this.secretOrKey, {
+            algorithms: [this.algorithm]
+        });
     }
 }
 exports.JwtService = JwtService;

@@ -45,7 +45,6 @@ class AccessTokenStrategy extends passport_jwt_1.Strategy {
             secretOrKey: process.env.JWT_ACCESS_SECRET,
         }, (payload, done) => {
             try {
-                // You would typically call a service here to validate the user exist
                 done(null, payload);
             }
             catch (error) {

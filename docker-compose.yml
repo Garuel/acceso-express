@@ -15,6 +15,8 @@ services:
       - DATABASE_USERNAME=postgres
       - DATABASE_PASSWORD=postgres
       - DATABASE_NAME=msacceso
+      - REDIS_HOST=redis-cache 
+      - REDIS_PORT=6379
       - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
@@ -22,8 +24,10 @@ services:
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN}
       - REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS=${REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS}
+      - MONGO_URI=${MONGO_URI}
     depends_on:
       - postgresql-db
+      - redis-cache
   postgresql-db:
     image: postgres:16-alpine
     container_name: postgresql-db
@@ -33,8 +37,26 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=msacceso
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  redis-cache:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: always
+    ports:
+      - 6379:6379
+  mongodb-database:
+    image: mongo:7.0
+    container_name: mongodb-database
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
 volumes:
   postgres_data:
+  mongo_data:

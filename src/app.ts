@@ -1,9 +1,9 @@
 import "reflect-metadata";
-import dotenv from "dotenv";
 
 import app from "./server";
-import { logger } from "./shared/infrastructure/utils/logger.util";
 import { DataSourceConfig } from "./shared/infrastructure/config/datasource.config";
+import { initializeMongo } from "./shared/infrastructure/config/mongoose.config";
+import { logger } from "./shared/infrastructure/utils/logger.util";
 
 const PORT = process.env.PORT || 6687;
 
@@ -11,6 +11,8 @@ async function startServer() {
   try {
     await DataSourceConfig.initialize();
     logger.info("Base de datos conectada con TypeORM");
+
+    await initializeMongo();
 
     app.listen(PORT, () => {
       logger.info(`Servidor corriendo en http://localhost:${PORT}`);

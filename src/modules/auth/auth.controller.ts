@@ -1,18 +1,27 @@
 import { NextFunction, Request, Response } from "express";
-import { AuthService } from "./auth.service";
 import { HttpStatusCode } from "../../shared/domain/enum/custom-error.enum";
 import { TipoRespuestaEnum } from "../../shared/domain/enum/tipo-alerta.enum";
 import { COOKIE_MAX_AGE } from "./constants/cookie-max-age.constant";
 
+import { LoginUseCase } from "./application/use-cases/login/login.use-case";
+import { PreRegisterUseCase } from "./application/use-cases/pre-register/pre-register.use-case";
+import { RefreshTokenUseCase } from "./application/use-cases/refresh-token/refresh-token.use.case";
+import { RegisterUseCase } from "./application/use-cases/register/register.use-case";
+
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly loginUseCase: LoginUseCase,
+    private readonly registerUseCase: RegisterUseCase,
+    private readonly preRegisterUseCase: PreRegisterUseCase,
+    private readonly refreshTokenUseCase: RefreshTokenUseCase
+  ) { }
 
   public async login(req: Request, res: Response, next: NextFunction) {
     try {
       const ipAddress = req.ip || req.socket.remoteAddress;
       const userAgent = req.headers["user-agent"];
 
-      const result = await this.authService.login({
+      const result = await this.loginUseCase.execute({
         ...req.body,
         ip: ipAddress,
         userAgent: userAgent,
@@ -39,7 +48,7 @@ export class AuthController {
 
   public async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await this.authService.register(req.body);
+      const result = await this.registerUseCase.execute(req.body);
       res.status(HttpStatusCode.CREATED).json(result);
     } catch (error) {
       next(error);
@@ -52,7 +61,7 @@ export class AuthController {
       const userAgent = req.headers["user-agent"];
       const { username } = req.body;
 
-      const plainKey = await this.authService.preRegister(
+      const plainKey = await this.preRegisterUseCase.execute(
         username,
         ipAddress || "",
         userAgent || "",
@@ -76,7 +85,7 @@ export class AuthController {
       return res.status(401).json({ message: "No hay token de refresco" });
     }
 
-    const result = await this.authService.refresh(oldRefreshToken);
+    const result = await this.refreshTokenUseCase.execute(oldRefreshToken);
 
     res.cookie("refreshToken", result.data?.refreshToken, {
       httpOnly: true,

@@ -5,6 +5,8 @@ const custom_error_class_1 = require("../../../shared/domain/classes/custom-erro
 const custom_error_enum_1 = require("../../../shared/domain/enum/custom-error.enum");
 const logger_util_1 = require("../../../shared/infrastructure/utils/logger.util");
 const estado_usuario_enum_1 = require("../../../shared/domain/enum/estado-usuario.enum");
+const tiempo_max_gracia_token_refresh_constat_1 = require("../constants/tiempo-max-gracia-token-refresh.constat");
+const build_util_1 = require("../../../shared/infrastructure/utils/build.util");
 var ValidateUtil;
 (function (ValidateUtil) {
     function validateEstadoUsuario(idEstado) {
@@ -69,4 +71,33 @@ var ValidateUtil;
         return { esValido: true };
     }
     ValidateUtil.existeUsuarioARegistrar = existeUsuarioARegistrar;
+    async function validarTiempoDeGracia(usuarioRefreshTokenEntity, usuarioRepository, usuarioRefreshTokenRepository, accessJwtService, idUsuario) {
+        if (usuarioRefreshTokenEntity.fechaUso !== null) {
+            const segundosDesdeElPrimerUso = (new Date().getTime() - usuarioRefreshTokenEntity.fechaUso.getTime()) /
+                1000;
+            if (segundosDesdeElPrimerUso <= tiempo_max_gracia_token_refresh_constat_1.TIEMPO_GRACIA_SEGUNDOS) {
+                logger_util_1.logger.warn(`Petición concurrente detectada (${segundosDesdeElPrimerUso}s). Retornando token existente.`);
+                const usuario = await usuarioRepository.getUsuarioPorId(idUsuario);
+                const usuarioInfoToken = build_util_1.BuildUtil.buildUsuarioInfoToken(usuario);
+                const accessToken = accessJwtService.sign(usuarioInfoToken);
+                return {
+                    esConcurrente: true,
+                    tokens: {
+                        accessToken,
+                        refreshToken: usuarioRefreshTokenEntity.refreshToken,
+                    },
+                };
+            }
+            logger_util_1.logger.error(`ALERTA DE SEGURIDAD: Intento de reutilización de Refresh Token para el usuario ${idUsuario}`);
+            await usuarioRefreshTokenRepository.eliminarTodosLosTokensDelUsuario(idUsuario);
+            throw new custom_error_class_1.CustomError({
+                statusCode: custom_error_enum_1.HttpStatusCode.UNAUTHORIZED,
+                message: "Brecha de seguridad detectada. Inicie sesión nuevamente.",
+            });
+        }
+        return {
+            esConcurrente: false,
+        };
+    }
+    ValidateUtil.validarTiempoDeGracia = validarTiempoDeGracia;
 })(ValidateUtil || (exports.ValidateUtil = ValidateUtil = {}));

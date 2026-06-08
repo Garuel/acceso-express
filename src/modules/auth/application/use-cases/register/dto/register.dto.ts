@@ -8,11 +8,9 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
-import {
-  MAX_LONG_NUMERO_DOC,
-  MIN_LONG_NUMERO_DOC,
-} from "../../../shared/domain/constants/max-min-numero-doc.constant";
-import { TipoDocumentoEnum } from "../../../shared/domain/enum/tipo-documento.enum";
+import { MAX_LONG_NUMERO_DOC, MIN_LONG_NUMERO_DOC } from "../../../../../../shared/domain/constants/max-min-numero-doc.constant";
+import { TipoDocumentoEnum } from "../../../../../../shared/domain/enum/tipo-documento.enum";
+
 
 export class RegisterDto {
   @IsString()

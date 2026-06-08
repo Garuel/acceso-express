@@ -1,6 +1,7 @@
 import { LoginRepository } from "../../../shared/database/repositories/auth/login/login.repository";
 import { CustomError } from "../../../shared/domain/classes/custom-error.class";
 import { HttpStatusCode } from "../../../shared/domain/enum/custom-error.enum";
+import { DateUtil } from "../../../shared/infrastructure/utils/date.util";
 import { EncryptUtil } from "../../../shared/infrastructure/utils/encrypt.util";
 import { logger } from "../../../shared/infrastructure/utils/logger.util";
 
@@ -40,5 +41,11 @@ export namespace AuthUtil {
     }
 
     return [login.confirmPassword!, passwordDecrypted];
+  }
+
+  export function getRefreshTokenExpiration(): Date {
+    return DateUtil.addTimeToCurrentDate(
+      process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+    );
   }
 }

@@ -11,12 +11,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var UsuarioRefreshTokenRepository_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsuarioRefreshTokenRepository = void 0;
 const tsyringe_1 = require("tsyringe");
 const typeorm_1 = require("typeorm");
 const usuario_refresh_token_entity_1 = require("../../../entities/core/usuario-refresh-token.entity");
-let UsuarioRefreshTokenRepository = class UsuarioRefreshTokenRepository {
+let UsuarioRefreshTokenRepository = UsuarioRefreshTokenRepository_1 = class UsuarioRefreshTokenRepository {
     connection;
     repo;
     constructor(connection) {
@@ -24,8 +25,9 @@ let UsuarioRefreshTokenRepository = class UsuarioRefreshTokenRepository {
         this.repo = this.connection.getRepository(usuario_refresh_token_entity_1.UsuarioRefreshTokenEntity);
     }
     setTransactionManager(manager) {
-        this.repo = manager.getRepository(usuario_refresh_token_entity_1.UsuarioRefreshTokenEntity);
-        return this;
+        const nuevoRepo = new UsuarioRefreshTokenRepository_1(this.connection);
+        nuevoRepo.repo = manager.getRepository(usuario_refresh_token_entity_1.UsuarioRefreshTokenEntity);
+        return nuevoRepo;
     }
     create(data) {
         return this.repo.save(this.repo.create(data));
@@ -49,6 +51,7 @@ let UsuarioRefreshTokenRepository = class UsuarioRefreshTokenRepository {
             "usuarioRefreshToken.idUsuario",
             "usuarioRefreshToken.refreshToken",
             "usuarioRefreshToken.fechaExpiracion",
+            "usuarioRefreshToken.fechaUso",
         ])
             .where("usuarioRefreshToken.refreshToken = :refreshToken", {
             refreshToken,
@@ -62,9 +65,24 @@ let UsuarioRefreshTokenRepository = class UsuarioRefreshTokenRepository {
             .where("id = :id", { id })
             .execute();
     }
+    marcarComoUsado(id) {
+        return this.repo
+            .createQueryBuilder()
+            .update()
+            .set({ fechaUso: new Date() })
+            .where("id = :id", { id })
+            .execute();
+    }
+    eliminarTodosLosTokensDelUsuario(idUsuario) {
+        return this.repo
+            .createQueryBuilder()
+            .delete()
+            .where("idUsuario = :idUsuario", { idUsuario })
+            .execute();
+    }
 };
 exports.UsuarioRefreshTokenRepository = UsuarioRefreshTokenRepository;
-exports.UsuarioRefreshTokenRepository = UsuarioRefreshTokenRepository = __decorate([
+exports.UsuarioRefreshTokenRepository = UsuarioRefreshTokenRepository = UsuarioRefreshTokenRepository_1 = __decorate([
     (0, tsyringe_1.singleton)(),
     __param(0, (0, tsyringe_1.inject)(typeorm_1.DataSource)),
     __metadata("design:paramtypes", [typeorm_1.DataSource])
