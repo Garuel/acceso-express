@@ -16,6 +16,7 @@ import { TokensInterface } from "../../../interface/token.interface";
 import { AuthUtil } from "../../../util/autil.util";
 import { ValidateUtil } from "../../../util/validate.util";
 import { RegisterDto } from "./dto/register.dto";
+import { AuditoriaRepository } from "../../../../../shared/database/mongodb/repositories/auditoria.repository";
 
 @singleton()
 export class RegisterUseCase {
@@ -26,6 +27,7 @@ export class RegisterUseCase {
         private readonly personaRepoInyectado: PersonaRepository,
         private readonly registrarUsuarioRepoInyectado: RegistrarUsuarioRequestRepository,
         private readonly redisService: RedisService,
+        private readonly auditoriaRepository: AuditoriaRepository
     ) { }
 
     async execute(request: RegisterDto): Promise<ResponseAPI> {
@@ -111,6 +113,15 @@ export class RegisterUseCase {
                     { uuid: request.rqUUID, fecha: new Date() },
                 ]);
                 logger.info("Rquuid insertado");
+
+
+                await this.auditoriaRepository.save({
+                    usuario: request.username,
+                    accion: "Register",
+                    detalles: {
+                        rqUUID: request.rqUUID
+                    }
+                })
 
                 return {
                     message: "Usuario registrado correctamente",

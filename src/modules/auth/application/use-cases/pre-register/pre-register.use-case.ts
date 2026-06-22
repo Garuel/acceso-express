@@ -7,28 +7,37 @@ import { LoginRepository } from "../../../../../shared/database/repositories/aut
 @singleton()
 export class PreRegisterUseCase {
     constructor(
-        private readonly dataSource: DataSource
+        private readonly dataSource: DataSource,
+        private readonly loginRepositoryInyectado: LoginRepository
     ) { }
 
     async execute(username: string,
         ip: string,
         userAgent: string): Promise<string> {
-        const loginRepository = new LoginRepository(this.dataSource);
 
-        //  llave aleatoria de 32 caracteres (16 IV + 16 Key)
         const plainKey = randomBytes(16).toString("hex");
 
-        await loginRepository.eliminarPorUsername(username);
 
-        await loginRepository.crear({
-            username,
-            confirmPassword: plainKey,
-            fechaExpiracion: new Date(Date.now() + 300000),
-            sessionToken: v4(),
-            ipAddress: ip,
-            userAgent: userAgent,
-        });
 
-        return plainKey;
+        const response = await this.dataSource.transaction<
+            string
+        >(async (manager) => {
+            const loginRepository = this.loginRepositoryInyectado.setTransactionManager(manager);
+
+            await loginRepository.eliminarPorUsername(username);
+
+            await loginRepository.crear({
+                username,
+                confirmPassword: plainKey,
+                fechaExpiracion: new Date(Date.now() + 300000),
+                sessionToken: v4(),
+                ipAddress: ip,
+                userAgent: userAgent,
+            });
+
+            return plainKey;
+
+        })
+        return response
     }
 }

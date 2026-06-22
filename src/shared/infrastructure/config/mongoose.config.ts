@@ -11,7 +11,9 @@ export async function initializeMongo(): Promise<void> {
             throw new Error("La variable MONGO_URI no está definida en el entorno");
         }
 
-        await mongoose.connect(mongoUri);
+        await mongoose.connect(mongoUri, {
+            family: 4
+        });
         logger.info("Base de datos MongoDB (Auditoría) conectada con éxito");
     } catch (error) {
         logger.error("Error al conectar MongoDB:", error);

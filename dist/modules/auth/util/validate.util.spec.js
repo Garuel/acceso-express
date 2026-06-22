@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const custom_error_class_1 = require("../../../shared/domain/classes/custom-error.class");
 const custom_error_enum_1 = require("../../../shared/domain/enum/custom-error.enum");
 const estado_usuario_enum_1 = require("../../../shared/domain/enum/estado-usuario.enum");
-const validate_util_1 = require("./validate.util");
-const custom_error_class_1 = require("../../../shared/domain/classes/custom-error.class");
 const tiempo_max_gracia_token_refresh_constat_1 = require("../constants/tiempo-max-gracia-token-refresh.constat");
+const validate_util_1 = require("./validate.util");
 describe("ValidateUtil", () => {
     beforeEach(() => {
         jest.clearAllMocks();

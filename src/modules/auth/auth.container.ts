@@ -18,6 +18,7 @@ import { LoginUseCase } from "./application/use-cases/login/login.use-case";
 import { RegisterUseCase } from "./application/use-cases/register/register.use-case";
 import { PreRegisterUseCase } from "./application/use-cases/pre-register/pre-register.use-case";
 import { RefreshTokenUseCase } from "./application/use-cases/refresh-token/refresh-token.use.case";
+import { AuditoriaRepository } from "../../shared/database/mongodb/repositories/auditoria.repository";
 
 dotenv.config();
 
@@ -49,13 +50,13 @@ const loginUsuarioRepo = new LoginUsuarioRequestRepository(DataSourceConfig);
 const registrarUsuarioRepo = new RegistrarUsuarioRequestRepository(DataSourceConfig);
 const usuarioRefreshTokenRepo = new UsuarioRefreshTokenRepository(DataSourceConfig);
 const redisService = new RedisService();
+const auditoriaRepository = new AuditoriaRepository();
 
 const tokenManagerService = new TokenManagerService(
   rsaAccessTokenService,
   rsaRefreshTokenService
 );
 
-// 4. Instanciar cada Caso de Uso de forma independiente (¡Mira qué limpios quedan!)
 const loginUseCase = new LoginUseCase(
   DataSourceConfig,
   tokenManagerService,
@@ -63,7 +64,8 @@ const loginUseCase = new LoginUseCase(
   loginRepo,
   loginUsuarioRepo,
   usuarioRefreshTokenRepo,
-  redisService
+  redisService,
+  auditoriaRepository
 );
 
 const registerUseCase = new RegisterUseCase(
@@ -72,13 +74,14 @@ const registerUseCase = new RegisterUseCase(
   loginRepo,
   personaRepo,
   registrarUsuarioRepo,
-  redisService
+  redisService,
+  auditoriaRepository
 );
 
 
 
 const preRegisterUseCase = new PreRegisterUseCase(
-  DataSourceConfig
+  loginRepo
 );
 
 const refreshTokenUseCase = new RefreshTokenUseCase(

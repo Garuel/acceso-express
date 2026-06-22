@@ -21,6 +21,7 @@ const login_use_case_1 = require("./application/use-cases/login/login.use-case")
 const register_use_case_1 = require("./application/use-cases/register/register.use-case");
 const pre_register_use_case_1 = require("./application/use-cases/pre-register/pre-register.use-case");
 const refresh_token_use_case_1 = require("./application/use-cases/refresh-token/refresh-token.use.case");
+const auditoria_repository_1 = require("../../shared/database/mongodb/repositories/auditoria.repository");
 dotenv_1.default.config();
 // const accessJwtService = new JwtService(process.env.JWT_ACCESS_SECRET!, "15m");
 // const refreshJwtService = new JwtService(process.env.JWT_REFRESH_SECRET!, "7d");
@@ -34,10 +35,10 @@ const loginUsuarioRepo = new login_usuario_repository_1.LoginUsuarioRequestRepos
 const registrarUsuarioRepo = new registrar_usuario_repository_1.RegistrarUsuarioRequestRepository(datasource_config_1.DataSourceConfig);
 const usuarioRefreshTokenRepo = new usuario_refresh_token_repository_1.UsuarioRefreshTokenRepository(datasource_config_1.DataSourceConfig);
 const redisService = new redis_service_1.RedisService();
+const auditoriaRepository = new auditoria_repository_1.AuditoriaRepository();
 const tokenManagerService = new token_manager_service_1.TokenManagerService(rsaAccessTokenService, rsaRefreshTokenService);
-// 4. Instanciar cada Caso de Uso de forma independiente (¡Mira qué limpios quedan!)
-const loginUseCase = new login_use_case_1.LoginUseCase(datasource_config_1.DataSourceConfig, tokenManagerService, usuarioRepo, loginRepo, loginUsuarioRepo, usuarioRefreshTokenRepo, redisService);
-const registerUseCase = new register_use_case_1.RegisterUseCase(datasource_config_1.DataSourceConfig, usuarioRepo, loginRepo, personaRepo, registrarUsuarioRepo, redisService);
+const loginUseCase = new login_use_case_1.LoginUseCase(datasource_config_1.DataSourceConfig, tokenManagerService, usuarioRepo, loginRepo, loginUsuarioRepo, usuarioRefreshTokenRepo, redisService, auditoriaRepository);
+const registerUseCase = new register_use_case_1.RegisterUseCase(datasource_config_1.DataSourceConfig, usuarioRepo, loginRepo, personaRepo, registrarUsuarioRepo, redisService, auditoriaRepository);
 const preRegisterUseCase = new pre_register_use_case_1.PreRegisterUseCase(datasource_config_1.DataSourceConfig);
 const refreshTokenUseCase = new refresh_token_use_case_1.RefreshTokenUseCase(datasource_config_1.DataSourceConfig, tokenManagerService, usuarioRepo, usuarioRefreshTokenRepo, rsaAccessTokenService, rsaRefreshTokenService);
 const authController = new auth_controller_1.AuthController(loginUseCase, registerUseCase, preRegisterUseCase, refreshTokenUseCase);

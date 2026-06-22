@@ -17,6 +17,7 @@ import { TokensInterface } from "../../../interface/token.interface";
 import { AuthUtil } from "../../../util/autil.util";
 import { ValidateUtil } from "../../../util/validate.util";
 import { TokenManagerService } from "../../services/token-manager.service";
+import { AuditoriaRepository } from "../../../../../shared/database/mongodb/repositories/auditoria.repository";
 
 @singleton()
 export class LoginUseCase {
@@ -28,6 +29,7 @@ export class LoginUseCase {
         private readonly loginUsuarioRepoInyectado: LoginUsuarioRequestRepository,
         private readonly usuarioRefreshTokenRepositoryInyectado: UsuarioRefreshTokenRepository,
         private readonly redisService: RedisService,
+        private readonly auditoriaRepository: AuditoriaRepository
     ) { }
 
     async execute(request: LoginDto): Promise<ResponseAPI<TokensInterface>> {
@@ -121,6 +123,16 @@ export class LoginUseCase {
                 refreshToken: tokens.refreshToken,
                 fechaExpiracion: AuthUtil.getRefreshTokenExpiration(),
             });
+
+            await this.auditoriaRepository.save({
+                usuario: request.username,
+                accion: "LOGIN",
+                ip: request.ip,
+                userAgent: request.userAgent,
+                detalles: {
+                    rqUUID: request.rqUUID
+                }
+            })
 
             return {
                 message: "Login exitoso",
