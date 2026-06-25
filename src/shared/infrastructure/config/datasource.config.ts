@@ -12,4 +12,7 @@ export const DataSourceConfig = new DataSource({
   entities: [__dirname + "/../../../**/*.entity{.ts,.js}"],
   migrations: [__dirname + "/../../../migrations/*{.ts,.js}"],
   migrationsRun: true,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });

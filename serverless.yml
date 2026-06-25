@@ -1,0 +1,45 @@
+service: ms-auth-serverless
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    NODE_ENV: production
+    CONTEXT: /acceso/api/v1
+    DATABASE_HOST: ${env:DATABASE_HOST_PROD}
+    DATABASE_PORT: ${env:DATABASE_PORT_PROD}
+    DATABASE_USERNAME: ${env:DATABASE_USERNAME_PROD}
+    DATABASE_PASSWORD: ${env:DATABASE_PASSWORD_PROD}
+    DATABASE_NAME: ${env:DATABASE_NAME_PROD}
+    REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS: ${env:REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS}
+    #JWT
+    JWT_ACCESS_SECRET: ${env:JWT_ACCESS_SECRET}
+    JWT_ACCESS_EXPIRES_IN: ${env:JWT_ACCESS_EXPIRES_IN}
+    JWT_REFRESH_SECRET: ${env:JWT_REFRESH_SECRET}
+    JWT_REFRESH_EXPIRES_IN: ${env:JWT_REFRESH_EXPIRES_IN}
+    JWT_PRIVATE_KEY: ${env:JWT_PRIVATE_KEY}
+    JWT_PUBLIC_KEY: ${env:JWT_PUBLIC_KEY}
+    #MONGO
+    MONGO_URI: ${env:MONGO_URI_PROD}
+    
+
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude:
+      - '@aws-sdk/client-s3'
+    tsconfigRaw:
+      compilerOptions:
+        emitDecoratorMetadata: true
+        experimentalDecorators: true
+
+functions:
+  api:
+    handler: lambda.handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: any

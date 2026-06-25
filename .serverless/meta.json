@@ -1,0 +1,1011 @@
+{
+  "D:\\QUIPU\\DESARROLLO\\nodejs-practica\\serverless.yml": {
+    "versionFramework": "4.38.1",
+    "servicePath": "D:\\QUIPU\\DESARROLLO\\nodejs-practica\\serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "ms-auth-serverless",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs18.x",
+        "region": "us-east-1",
+        "stage": "dev",
+        "environment": {
+          "NODE_ENV": "production",
+          "CONTEXT": "/acceso/api/v1",
+          "DATABASE_HOST": "db-acceso-user.cena6qmm83ob.us-east-1.rds.amazonaws.com",
+          "DATABASE_PORT": "5432",
+          "DATABASE_USERNAME": "db_acceso_user",
+          "DATABASE_PASSWORD": "<REDACTED>",
+          "DATABASE_NAME": "postgres",
+          "REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS": "<REDACTED>",
+          "JWT_ACCESS_SECRET": "<REDACTED>",
+          "JWT_ACCESS_EXPIRES_IN": "7d",
+          "JWT_REFRESH_SECRET": "<REDACTED>",
+          "JWT_REFRESH_EXPIRES_IN": "7d",
+          "JWT_PRIVATE_KEY": "<REDACTED>",
+          "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsChP826RGybQrDz0bnUQ\ncQm8t75VnPhum3f/KpbVt7vQWIX+5e+JCEfNbOr6RYh8ryRoMGCi/OJzAbNP+0ed\nAFuqipHddefWMcLLBoWd3qY/S5njHy8r0PW0X642PM3DJmhutc/CDFhRW/LbCOKg\ngZujx1xNNYdId0X2awlVNeBMlwvsQorWRSP2aZhwXEh4AxB9XmbbNwY6IZIZbnqD\nJwAPBapeZ5GQHJ9G83ufdMLXNqH9HUIhgqI6okooReSSW+Taqpvx//kdWRv8R0RC\nV8CR4YncZb/UnXGBo5UhVAu5mATpzn1WoW7ARdHkJQJFX7ab6Soaa2s+EfLOcTNW\nLQIDAQAB\n-----END PUBLIC KEY-----",
+          "MONGO_URI": "mongodb+srv://mongodb:mongodb@db-acceso.4nijdtp.mongodb.net/auditoria?appName=db-acceso"
+        },
+        "versionFunctions": true,
+        "compiledCloudFormationTemplate": {
+          "AWSTemplateFormatVersion": "2010-09-09",
+          "Description": "The AWS CloudFormation template for this Serverless application",
+          "Resources": {
+            "ApiLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/lambda/ms-auth-serverless-dev-api"
+              }
+            },
+            "IamRoleLambdaExecution": {
+              "Type": "AWS::IAM::Role",
+              "Properties": {
+                "AssumeRolePolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": [
+                          "lambda.amazonaws.com"
+                        ]
+                      },
+                      "Action": [
+                        "sts:AssumeRole"
+                      ]
+                    }
+                  ]
+                },
+                "Policies": [
+                  {
+                    "PolicyName": {
+                      "Fn::Join": [
+                        "-",
+                        [
+                          "ms-auth-serverless",
+                          "dev",
+                          "lambda"
+                        ]
+                      ]
+                    },
+                    "PolicyDocument": {
+                      "Version": "2012-10-17",
+                      "Statement": [
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:CreateLogStream",
+                            "logs:CreateLogGroup",
+                            "logs:TagResource"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ms-auth-serverless-dev*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:PutLogEvents"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ms-auth-serverless-dev*:*:*"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "Path": "/",
+                "RoleName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "ms-auth-serverless",
+                      "dev",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "lambdaRole"
+                    ]
+                  ]
+                }
+              }
+            },
+            "ApiLambdaFunction": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "Code": {
+                  "S3Bucket": "serverless-framework-deployments-us-east-1-24c07b28-d9ed",
+                  "S3Key": "serverless/ms-auth-serverless/dev/1782347612733-2026-06-25T00:33:32.733Z/ms-auth-serverless.zip"
+                },
+                "Handler": "lambda.handler",
+                "Runtime": "nodejs18.x",
+                "FunctionName": "ms-auth-serverless-dev-api",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "Environment": {
+                  "Variables": {
+                    "NODE_ENV": "production",
+                    "CONTEXT": "/acceso/api/v1",
+                    "DATABASE_HOST": "db-acceso-user.cena6qmm83ob.us-east-1.rds.amazonaws.com",
+                    "DATABASE_PORT": "5432",
+                    "DATABASE_USERNAME": "db_acceso_user",
+                    "DATABASE_PASSWORD": "<REDACTED>",
+                    "DATABASE_NAME": "postgres",
+                    "REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS": "<REDACTED>",
+                    "JWT_ACCESS_SECRET": "<REDACTED>",
+                    "JWT_ACCESS_EXPIRES_IN": "7d",
+                    "JWT_REFRESH_SECRET": "<REDACTED>",
+                    "JWT_REFRESH_EXPIRES_IN": "7d",
+                    "JWT_PRIVATE_KEY": "<REDACTED>",
+                    "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsChP826RGybQrDz0bnUQ\ncQm8t75VnPhum3f/KpbVt7vQWIX+5e+JCEfNbOr6RYh8ryRoMGCi/OJzAbNP+0ed\nAFuqipHddefWMcLLBoWd3qY/S5njHy8r0PW0X642PM3DJmhutc/CDFhRW/LbCOKg\ngZujx1xNNYdId0X2awlVNeBMlwvsQorWRSP2aZhwXEh4AxB9XmbbNwY6IZIZbnqD\nJwAPBapeZ5GQHJ9G83ufdMLXNqH9HUIhgqI6okooReSSW+Taqpvx//kdWRv8R0RC\nV8CR4YncZb/UnXGBo5UhVAu5mATpzn1WoW7ARdHkJQJFX7ab6Soaa2s+EfLOcTNW\nLQIDAQAB\n-----END PUBLIC KEY-----",
+                    "MONGO_URI": "mongodb+srv://mongodb:mongodb@db-acceso.4nijdtp.mongodb.net/auditoria?appName=db-acceso",
+                    "NODE_OPTIONS": "--enable-source-maps"
+                  }
+                },
+                "Role": {
+                  "Fn::GetAtt": [
+                    "IamRoleLambdaExecution",
+                    "Arn"
+                  ]
+                }
+              },
+              "DependsOn": [
+                "ApiLogGroup"
+              ]
+            },
+            "ApiLambdaVersionDFxQN3Mp0ZCvJ8gofNiRSyyEbVhJvFdUlYW7sJPjjYw": {
+              "Type": "AWS::Lambda::Version",
+              "DeletionPolicy": "Retain",
+              "Properties": {
+                "FunctionName": {
+                  "Ref": "ApiLambdaFunction"
+                },
+                "CodeSha256": "2lhYD/ezLzVrpDRLqOcuEdPenbHrkZ6GpFJtcMYl9AM="
+              }
+            },
+            "HttpApi": {
+              "Type": "AWS::ApiGatewayV2::Api",
+              "Properties": {
+                "Name": "dev-ms-auth-serverless",
+                "ProtocolType": "HTTP"
+              }
+            },
+            "HttpApiStage": {
+              "Type": "AWS::ApiGatewayV2::Stage",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "StageName": "$default",
+                "AutoDeploy": true,
+                "DefaultRouteSettings": {
+                  "DetailedMetricsEnabled": false
+                }
+              }
+            },
+            "ApiLambdaPermissionHttpApi": {
+              "Type": "AWS::Lambda::Permission",
+              "Properties": {
+                "FunctionName": {
+                  "Fn::GetAtt": [
+                    "ApiLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":execute-api:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":",
+                      {
+                        "Ref": "HttpApi"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              }
+            },
+            "HttpApiIntegrationApi": {
+              "Type": "AWS::ApiGatewayV2::Integration",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "IntegrationType": "AWS_PROXY",
+                "IntegrationUri": {
+                  "Fn::GetAtt": [
+                    "ApiLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "PayloadFormatVersion": "2.0",
+                "TimeoutInMillis": 30000
+              }
+            },
+            "HttpApiRouteAnyProxyVar": {
+              "Type": "AWS::ApiGatewayV2::Route",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "RouteKey": "ANY /{proxy+}",
+                "Target": {
+                  "Fn::Join": [
+                    "/",
+                    [
+                      "integrations",
+                      {
+                        "Ref": "HttpApiIntegrationApi"
+                      }
+                    ]
+                  ]
+                }
+              },
+              "DependsOn": "HttpApiIntegrationApi"
+            }
+          },
+          "Outputs": {
+            "ServerlessDeploymentBucketName": {
+              "Value": "serverless-framework-deployments-us-east-1-24c07b28-d9ed",
+              "Export": {
+                "Name": "sls-ms-auth-serverless-dev-ServerlessDeploymentBucketName"
+              }
+            },
+            "ApiLambdaFunctionQualifiedArn": {
+              "Description": "Current Lambda function version",
+              "Value": {
+                "Ref": "ApiLambdaVersionDFxQN3Mp0ZCvJ8gofNiRSyyEbVhJvFdUlYW7sJPjjYw"
+              },
+              "Export": {
+                "Name": "sls-ms-auth-serverless-dev-ApiLambdaFunctionQualifiedArn"
+              }
+            },
+            "HttpApiId": {
+              "Description": "Id of the HTTP API",
+              "Value": {
+                "Ref": "HttpApi"
+              },
+              "Export": {
+                "Name": "sls-ms-auth-serverless-dev-HttpApiId"
+              }
+            },
+            "HttpApiUrl": {
+              "Description": "URL of the HTTP API",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "https://",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    ".execute-api.",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ".",
+                    {
+                      "Ref": "AWS::URLSuffix"
+                    }
+                  ]
+                ]
+              },
+              "Export": {
+                "Name": "sls-ms-auth-serverless-dev-HttpApiUrl"
+              }
+            }
+          }
+        },
+        "vpc": {}
+      },
+      "build": {
+        "esbuild": {
+          "bundle": true,
+          "minify": false,
+          "sourcemap": true,
+          "exclude": [
+            "@aws-sdk/client-s3"
+          ]
+        }
+      },
+      "functions": {
+        "api": {
+          "handler": "lambda.handler",
+          "events": [
+            {
+              "httpApi": {
+                "path": "/{proxy+}",
+                "method": "any"
+              },
+              "resolvedMethod": "ANY",
+              "resolvedPath": "/{proxy+}"
+            }
+          ],
+          "name": "ms-auth-serverless-dev-api",
+          "environment": {
+            "NODE_OPTIONS": "--enable-source-maps"
+          },
+          "package": {},
+          "memory": 1024,
+          "timeout": 6,
+          "runtime": "nodejs18.x",
+          "vpc": {},
+          "versionLogicalId": "ApiLambdaVersionDFxQN3Mp0ZCvJ8gofNiRSyyEbVhJvFdUlYW7sJPjjYw"
+        }
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "us-east-1",
+      "stage": "dev",
+      "environment": {
+        "NODE_ENV": "production",
+        "CONTEXT": "/acceso/api/v1",
+        "DATABASE_HOST": "db-acceso-user.cena6qmm83ob.us-east-1.rds.amazonaws.com",
+        "DATABASE_PORT": "5432",
+        "DATABASE_USERNAME": "db_acceso_user",
+        "DATABASE_PASSWORD": "<REDACTED>",
+        "DATABASE_NAME": "postgres",
+        "REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS": "<REDACTED>",
+        "JWT_ACCESS_SECRET": "<REDACTED>",
+        "JWT_ACCESS_EXPIRES_IN": "7d",
+        "JWT_REFRESH_SECRET": "<REDACTED>",
+        "JWT_REFRESH_EXPIRES_IN": "7d",
+        "JWT_PRIVATE_KEY": "<REDACTED>",
+        "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsChP826RGybQrDz0bnUQ\ncQm8t75VnPhum3f/KpbVt7vQWIX+5e+JCEfNbOr6RYh8ryRoMGCi/OJzAbNP+0ed\nAFuqipHddefWMcLLBoWd3qY/S5njHy8r0PW0X642PM3DJmhutc/CDFhRW/LbCOKg\ngZujx1xNNYdId0X2awlVNeBMlwvsQorWRSP2aZhwXEh4AxB9XmbbNwY6IZIZbnqD\nJwAPBapeZ5GQHJ9G83ufdMLXNqH9HUIhgqI6okooReSSW+Taqpvx//kdWRv8R0RC\nV8CR4YncZb/UnXGBo5UhVAu5mATpzn1WoW7ARdHkJQJFX7ab6Soaa2s+EfLOcTNW\nLQIDAQAB\n-----END PUBLIC KEY-----",
+        "MONGO_URI": "mongodb+srv://mongodb:mongodb@db-acceso.4nijdtp.mongodb.net/auditoria?appName=db-acceso"
+      },
+      "versionFunctions": true,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ApiLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/ms-auth-serverless-dev-api"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "ms-auth-serverless",
+                        "dev",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream",
+                          "logs:CreateLogGroup",
+                          "logs:TagResource"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ms-auth-serverless-dev*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ms-auth-serverless-dev*:*:*"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "ms-auth-serverless",
+                    "dev",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "ApiLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-24c07b28-d9ed",
+                "S3Key": "serverless/ms-auth-serverless/dev/1782347612733-2026-06-25T00:33:32.733Z/ms-auth-serverless.zip"
+              },
+              "Handler": "lambda.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "ms-auth-serverless-dev-api",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "NODE_ENV": "production",
+                  "CONTEXT": "/acceso/api/v1",
+                  "DATABASE_HOST": "db-acceso-user.cena6qmm83ob.us-east-1.rds.amazonaws.com",
+                  "DATABASE_PORT": "5432",
+                  "DATABASE_USERNAME": "db_acceso_user",
+                  "DATABASE_PASSWORD": "<REDACTED>",
+                  "DATABASE_NAME": "postgres",
+                  "REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS": "<REDACTED>",
+                  "JWT_ACCESS_SECRET": "<REDACTED>",
+                  "JWT_ACCESS_EXPIRES_IN": "7d",
+                  "JWT_REFRESH_SECRET": "<REDACTED>",
+                  "JWT_REFRESH_EXPIRES_IN": "7d",
+                  "JWT_PRIVATE_KEY": "<REDACTED>",
+                  "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsChP826RGybQrDz0bnUQ\ncQm8t75VnPhum3f/KpbVt7vQWIX+5e+JCEfNbOr6RYh8ryRoMGCi/OJzAbNP+0ed\nAFuqipHddefWMcLLBoWd3qY/S5njHy8r0PW0X642PM3DJmhutc/CDFhRW/LbCOKg\ngZujx1xNNYdId0X2awlVNeBMlwvsQorWRSP2aZhwXEh4AxB9XmbbNwY6IZIZbnqD\nJwAPBapeZ5GQHJ9G83ufdMLXNqH9HUIhgqI6okooReSSW+Taqpvx//kdWRv8R0RC\nV8CR4YncZb/UnXGBo5UhVAu5mATpzn1WoW7ARdHkJQJFX7ab6Soaa2s+EfLOcTNW\nLQIDAQAB\n-----END PUBLIC KEY-----",
+                  "MONGO_URI": "mongodb+srv://mongodb:mongodb@db-acceso.4nijdtp.mongodb.net/auditoria?appName=db-acceso",
+                  "NODE_OPTIONS": "--enable-source-maps"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "ApiLogGroup"
+            ]
+          },
+          "ApiLambdaVersionDFxQN3Mp0ZCvJ8gofNiRSyyEbVhJvFdUlYW7sJPjjYw": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ApiLambdaFunction"
+              },
+              "CodeSha256": "2lhYD/ezLzVrpDRLqOcuEdPenbHrkZ6GpFJtcMYl9AM="
+            }
+          },
+          "HttpApi": {
+            "Type": "AWS::ApiGatewayV2::Api",
+            "Properties": {
+              "Name": "dev-ms-auth-serverless",
+              "ProtocolType": "HTTP"
+            }
+          },
+          "HttpApiStage": {
+            "Type": "AWS::ApiGatewayV2::Stage",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "StageName": "$default",
+              "AutoDeploy": true,
+              "DefaultRouteSettings": {
+                "DetailedMetricsEnabled": false
+              }
+            }
+          },
+          "ApiLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "ApiLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationApi": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "Fn::GetAtt": [
+                  "ApiLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteAnyProxyVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "ANY /{proxy+}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationApi"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationApi"
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": "serverless-framework-deployments-us-east-1-24c07b28-d9ed",
+            "Export": {
+              "Name": "sls-ms-auth-serverless-dev-ServerlessDeploymentBucketName"
+            }
+          },
+          "ApiLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ApiLambdaVersionDFxQN3Mp0ZCvJ8gofNiRSyyEbVhJvFdUlYW7sJPjjYw"
+            },
+            "Export": {
+              "Name": "sls-ms-auth-serverless-dev-ApiLambdaFunctionQualifiedArn"
+            }
+          },
+          "HttpApiId": {
+            "Description": "Id of the HTTP API",
+            "Value": {
+              "Ref": "HttpApi"
+            },
+            "Export": {
+              "Name": "sls-ms-auth-serverless-dev-HttpApiId"
+            }
+          },
+          "HttpApiUrl": {
+            "Description": "URL of the HTTP API",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  }
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-ms-auth-serverless-dev-HttpApiUrl"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "serviceRawFile": "service: ms-auth-serverless\r\nprovider:\r\n  name: aws\r\n  runtime: nodejs18.x\r\n  region: us-east-1\r\n  stage: ${opt:stage, 'dev'}\r\n  environment:\r\n    NODE_ENV: production\r\n    CONTEXT: /acceso/api/v1\r\n    DATABASE_HOST: ${env:DATABASE_HOST_PROD}\r\n    DATABASE_PORT: ${env:DATABASE_PORT_PROD}\r\n    DATABASE_USERNAME: ${env:DATABASE_USERNAME_PROD}\r\n    DATABASE_PASSWORD: ${env:DATABASE_PASSWORD_PROD}\r\n    DATABASE_NAME: ${env:DATABASE_NAME_PROD}\r\n    REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS: ${env:REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS}\r\n    #JWT\r\n    JWT_ACCESS_SECRET: ${env:JWT_ACCESS_SECRET}\r\n    JWT_ACCESS_EXPIRES_IN: ${env:JWT_ACCESS_EXPIRES_IN}\r\n    JWT_REFRESH_SECRET: ${env:JWT_REFRESH_SECRET}\r\n    JWT_REFRESH_EXPIRES_IN: ${env:JWT_REFRESH_EXPIRES_IN}\r\n    JWT_PRIVATE_KEY: ${env:JWT_PRIVATE_KEY}\r\n    JWT_PUBLIC_KEY: ${env:JWT_PUBLIC_KEY}\r\n    #MONGO\r\n    MONGO_URI: ${env:MONGO_URI_PROD}\r\n    \r\n\r\nbuild:\r\n  esbuild:\r\n    bundle: true\r\n    minify: false\r\n    sourcemap: true\r\n    exclude:\r\n      - '@aws-sdk/client-s3'\r\n\r\nfunctions:\r\n  api:\r\n    handler: lambda.handler\r\n    events:\r\n      - httpApi:\r\n          path: /{proxy+}\r\n          method: any",
+    "command": [
+      "deploy"
+    ],
+    "options": {},
+    "orgId": "af5c29df-d380-4f24-affa-fb09dafb5509",
+    "orgName": "garuel",
+    "userId": "FMd1lsYnnpp1C2Bl8s",
+    "userName": "garuel",
+    "serviceProviderAwsAccountId": "930698106413",
+    "serviceProviderAwsCfStackName": "ms-auth-serverless-dev",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:930698106413:stack/ms-auth-serverless-dev/82913670-702d-11f1-bdb9-0efce54214ed",
+    "serviceProviderAwsCfStackCreated": "2026-06-25T00:33:39.308Z",
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": "CREATE_COMPLETE",
+    "serviceProviderAwsCfStackOutputs": [
+      {
+        "OutputKey": "ApiLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:930698106413:function:ms-auth-serverless-dev-api:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-ms-auth-serverless-dev-ApiLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "HttpApiId",
+        "OutputValue": "1bvgruhzp8",
+        "Description": "Id of the HTTP API",
+        "ExportName": "sls-ms-auth-serverless-dev-HttpApiId"
+      },
+      {
+        "OutputKey": "ServerlessDeploymentBucketName",
+        "OutputValue": "serverless-framework-deployments-us-east-1-24c07b28-d9ed",
+        "ExportName": "sls-ms-auth-serverless-dev-ServerlessDeploymentBucketName"
+      },
+      {
+        "OutputKey": "HttpApiUrl",
+        "OutputValue": "https://1bvgruhzp8.execute-api.us-east-1.amazonaws.com",
+        "Description": "URL of the HTTP API",
+        "ExportName": "sls-ms-auth-serverless-dev-HttpApiUrl"
+      }
+    ],
+    "compiledCloudFormationTemplate": {
+      "AWSTemplateFormatVersion": "2010-09-09",
+      "Description": "The AWS CloudFormation template for this Serverless application",
+      "Resources": {
+        "ApiLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/ms-auth-serverless-dev-api"
+          }
+        },
+        "IamRoleLambdaExecution": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": [
+                      "lambda.amazonaws.com"
+                    ]
+                  },
+                  "Action": [
+                    "sts:AssumeRole"
+                  ]
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "ms-auth-serverless",
+                      "dev",
+                      "lambda"
+                    ]
+                  ]
+                },
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                        "logs:TagResource"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ms-auth-serverless-dev*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:PutLogEvents"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ms-auth-serverless-dev*:*:*"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "Path": "/",
+            "RoleName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "ms-auth-serverless",
+                  "dev",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  "lambdaRole"
+                ]
+              ]
+            }
+          }
+        },
+        "ApiLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-24c07b28-d9ed",
+              "S3Key": "serverless/ms-auth-serverless/dev/1782347612733-2026-06-25T00:33:32.733Z/ms-auth-serverless.zip"
+            },
+            "Handler": "lambda.handler",
+            "Runtime": "nodejs18.x",
+            "FunctionName": "ms-auth-serverless-dev-api",
+            "MemorySize": 1024,
+            "Timeout": 6,
+            "Environment": {
+              "Variables": {
+                "NODE_ENV": "production",
+                "CONTEXT": "/acceso/api/v1",
+                "DATABASE_HOST": "db-acceso-user.cena6qmm83ob.us-east-1.rds.amazonaws.com",
+                "DATABASE_PORT": "5432",
+                "DATABASE_USERNAME": "db_acceso_user",
+                "DATABASE_PASSWORD": "<REDACTED>",
+                "DATABASE_NAME": "postgres",
+                "REFRESH_TOKEN_TIEMPO_GRACIA_SEGUNDOS": "<REDACTED>",
+                "JWT_ACCESS_SECRET": "<REDACTED>",
+                "JWT_ACCESS_EXPIRES_IN": "7d",
+                "JWT_REFRESH_SECRET": "<REDACTED>",
+                "JWT_REFRESH_EXPIRES_IN": "7d",
+                "JWT_PRIVATE_KEY": "<REDACTED>",
+                "JWT_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsChP826RGybQrDz0bnUQ\ncQm8t75VnPhum3f/KpbVt7vQWIX+5e+JCEfNbOr6RYh8ryRoMGCi/OJzAbNP+0ed\nAFuqipHddefWMcLLBoWd3qY/S5njHy8r0PW0X642PM3DJmhutc/CDFhRW/LbCOKg\ngZujx1xNNYdId0X2awlVNeBMlwvsQorWRSP2aZhwXEh4AxB9XmbbNwY6IZIZbnqD\nJwAPBapeZ5GQHJ9G83ufdMLXNqH9HUIhgqI6okooReSSW+Taqpvx//kdWRv8R0RC\nV8CR4YncZb/UnXGBo5UhVAu5mATpzn1WoW7ARdHkJQJFX7ab6Soaa2s+EfLOcTNW\nLQIDAQAB\n-----END PUBLIC KEY-----",
+                "MONGO_URI": "mongodb+srv://mongodb:mongodb@db-acceso.4nijdtp.mongodb.net/auditoria?appName=db-acceso",
+                "NODE_OPTIONS": "--enable-source-maps"
+              }
+            },
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            }
+          },
+          "DependsOn": [
+            "ApiLogGroup"
+          ]
+        },
+        "ApiLambdaVersionDFxQN3Mp0ZCvJ8gofNiRSyyEbVhJvFdUlYW7sJPjjYw": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "ApiLambdaFunction"
+            },
+            "CodeSha256": "2lhYD/ezLzVrpDRLqOcuEdPenbHrkZ6GpFJtcMYl9AM="
+          }
+        },
+        "HttpApi": {
+          "Type": "AWS::ApiGatewayV2::Api",
+          "Properties": {
+            "Name": "dev-ms-auth-serverless",
+            "ProtocolType": "HTTP"
+          }
+        },
+        "HttpApiStage": {
+          "Type": "AWS::ApiGatewayV2::Stage",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "StageName": "$default",
+            "AutoDeploy": true,
+            "DefaultRouteSettings": {
+              "DetailedMetricsEnabled": false
+            }
+          }
+        },
+        "ApiLambdaPermissionHttpApi": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "FunctionName": {
+              "Fn::GetAtt": [
+                "ApiLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Action": "lambda:InvokeFunction",
+            "Principal": "apigateway.amazonaws.com",
+            "SourceArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":execute-api:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  "/*"
+                ]
+              ]
+            }
+          }
+        },
+        "HttpApiIntegrationApi": {
+          "Type": "AWS::ApiGatewayV2::Integration",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": {
+              "Fn::GetAtt": [
+                "ApiLambdaFunction",
+                "Arn"
+              ]
+            },
+            "PayloadFormatVersion": "2.0",
+            "TimeoutInMillis": 30000
+          }
+        },
+        "HttpApiRouteAnyProxyVar": {
+          "Type": "AWS::ApiGatewayV2::Route",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "RouteKey": "ANY /{proxy+}",
+            "Target": {
+              "Fn::Join": [
+                "/",
+                [
+                  "integrations",
+                  {
+                    "Ref": "HttpApiIntegrationApi"
+                  }
+                ]
+              ]
+            }
+          },
+          "DependsOn": "HttpApiIntegrationApi"
+        }
+      },
+      "Outputs": {
+        "ServerlessDeploymentBucketName": {
+          "Value": "serverless-framework-deployments-us-east-1-24c07b28-d9ed",
+          "Export": {
+            "Name": "sls-ms-auth-serverless-dev-ServerlessDeploymentBucketName"
+          }
+        },
+        "ApiLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "ApiLambdaVersionDFxQN3Mp0ZCvJ8gofNiRSyyEbVhJvFdUlYW7sJPjjYw"
+          },
+          "Export": {
+            "Name": "sls-ms-auth-serverless-dev-ApiLambdaFunctionQualifiedArn"
+          }
+        },
+        "HttpApiId": {
+          "Description": "Id of the HTTP API",
+          "Value": {
+            "Ref": "HttpApi"
+          },
+          "Export": {
+            "Name": "sls-ms-auth-serverless-dev-HttpApiId"
+          }
+        },
+        "HttpApiUrl": {
+          "Description": "URL of the HTTP API",
+          "Value": {
+            "Fn::Join": [
+              "",
+              [
+                "https://",
+                {
+                  "Ref": "HttpApi"
+                },
+                ".execute-api.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".",
+                {
+                  "Ref": "AWS::URLSuffix"
+                }
+              ]
+            ]
+          },
+          "Export": {
+            "Name": "sls-ms-auth-serverless-dev-HttpApiUrl"
+          }
+        }
+      }
+    }
+  }
+}
