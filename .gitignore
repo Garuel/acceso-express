@@ -5,4 +5,10 @@ logs
 .env
 claves
 mejoras
-terraform.tfvars
+**/terraform/.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+*.tfvars
+*.tfvars.json
